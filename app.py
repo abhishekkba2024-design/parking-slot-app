@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 # =========================================================
-# CONFIG — ONE DRIVE (SINGLE SOURCE OF TRUTH)
+# CONFIG — ONE DRIVE STORAGE (WINDOWS)
 # =========================================================
 DATA_DIR = Path(
     r"C:\Users\10019784\OneDrive - Maruti Suzuki India Limited\Parking_Slot\Data"
@@ -12,16 +12,17 @@ USERS_FILE = DATA_DIR / "users.csv"
 STATUS_FILE = DATA_DIR / "parking_status.csv"
 TOTAL_SLOTS = 10
 
-# Ensure directory exists in OneDrive
+# Ensure OneDrive directory exists
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # =========================================================
-# CSV SAFE LOADERS (AUTO-REPAIR)
+# CSV LOADERS (AUTO-REPAIR)
 # =========================================================
 def load_users():
     df = pd.read_csv(USERS_FILE)
     df.columns = df.columns.str.strip()
 
+    # Auto-fix broken single-column CSV
     if len(df.columns) == 1 and "," in df.columns[0]:
         df = df[df.columns[0]].str.split(",", expand=True)
         df.columns = ["username", "password"]
@@ -34,6 +35,7 @@ def load_status():
     df = pd.read_csv(STATUS_FILE)
     df.columns = df.columns.str.strip()
 
+    # Auto-fix broken single-column CSV
     if len(df.columns) == 1 and "," in df.columns[0]:
         df = df[df.columns[0]].str.split(",", expand=True)
         df.columns = ["username", "parked"]
@@ -43,18 +45,19 @@ def load_status():
 
 
 def save_status(df):
-    df.to_csv(STATUS_FILE, index=False, flush=True)
+    # ✅ Correct: no flush parameter
+    df.to_csv(STATUS_FILE, index=False)
 
 
 def authenticate(username, password):
     users = load_users()
     return not users[
-        (users["username"] == username)
-        & (users["password"] == password)
+        (users["username"] == username) &
+        (users["password"] == password)
     ].empty
 
 # =========================================================
-# INITIAL FILE CREATION (FIRST RUN ONLY)
+# INITIAL FILE CREATION (FIRST RUN)
 # =========================================================
 if not USERS_FILE.exists():
     pd.DataFrame({
@@ -110,7 +113,7 @@ else:
     status_df = load_status()
 
     # -----------------------------------------------------
-    # UPDATE STATUS
+    # UPDATE PARKING STATUS
     # -----------------------------------------------------
     st.subheader("Update Your Parking Status")
 
@@ -133,14 +136,14 @@ else:
 
         save_status(status_df)
 
-        st.success("✅ Status saved & synced to OneDrive")
-        st.code(f"Saved file:\n{STATUS_FILE}", language="text")
+        st.success("✅ Status saved to OneDrive")
+        st.code(str(STATUS_FILE))
         st.rerun()
 
     st.divider()
 
     # -----------------------------------------------------
-    # LIVE SLOTS
+    # LIVE SLOT AVAILABILITY
     # -----------------------------------------------------
     st.subheader("Live Parking Slot Availability")
 
