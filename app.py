@@ -2,21 +2,25 @@ import streamlit as st
 import pandas as pd
 import os
 
-# ---------------- CONFIG ----------------
+# =========================================================
+# CONFIG – ONE DRIVE STORAGE (ONLY HERE)
+# =========================================================
 DATA_DIR = r"C:\Users\10019784\OneDrive - Maruti Suzuki India Limited\Parking_Slot\Data"
 USERS_FILE = os.path.join(DATA_DIR, "users.csv")
 STATUS_FILE = os.path.join(DATA_DIR, "parking_status.csv")
 TOTAL_SLOTS = 10
 
-# ---------------- ENSURE DATA DIR ----------------
+# Ensure OneDrive folder exists
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# ---------------- SAFE LOADERS ----------------
+# =========================================================
+# SAFE LOADERS (AUTO-FIX CSV FORMAT ISSUES)
+# =========================================================
 def load_users():
     df = pd.read_csv(USERS_FILE, header=0)
     df.columns = df.columns.str.strip()
 
-    # Auto-fix single-column broken CSV
+    # Auto-fix broken single-column CSV
     if len(df.columns) == 1 and "," in df.columns[0]:
         df = df[df.columns[0]].str.split(",", expand=True)
         df.columns = ["username", "password"]
@@ -29,7 +33,7 @@ def load_status():
     df = pd.read_csv(STATUS_FILE, header=0)
     df.columns = df.columns.str.strip()
 
-    # Auto-fix single-column broken CSV
+    # Auto-fix broken single-column CSV
     if len(df.columns) == 1 and "," in df.columns[0]:
         df = df[df.columns[0]].str.split(",", expand=True)
         df.columns = ["username", "parked"]
@@ -49,7 +53,9 @@ def authenticate(username, password):
         (users["password"] == password)
     ].empty
 
-# ---------------- INIT FILES IF MISSING ----------------
+# =========================================================
+# INIT FILES IN ONE DRIVE (FIRST RUN)
+# =========================================================
 if not os.path.exists(USERS_FILE):
     pd.DataFrame({
         "username": ["admin", "user1", "user2"],
@@ -62,12 +68,16 @@ if not os.path.exists(STATUS_FILE):
         "parked": ["No", "No", "No"]
     }).to_csv(STATUS_FILE, index=False)
 
-# ---------------- SESSION STATE ----------------
+# =========================================================
+# SESSION STATE
+# =========================================================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.username = ""
 
-# ---------------- LOGIN PAGE ----------------
+# =========================================================
+# LOGIN PAGE
+# =========================================================
 if not st.session_state.logged_in:
 
     st.title("🚗 Parking Slot Management System")
@@ -84,7 +94,9 @@ if not st.session_state.logged_in:
         else:
             st.error("❌ Invalid username or password")
 
-# ---------------- MAIN DASHBOARD ----------------
+# =========================================================
+# MAIN DASHBOARD
+# =========================================================
 else:
     st.sidebar.title("User Panel")
     st.sidebar.write(f"👤 **{st.session_state.username}**")
@@ -98,7 +110,9 @@ else:
 
     status_df = load_status()
 
-    # -------- USER STATUS UPDATE --------
+    # -----------------------------------------------------
+    # UPDATE PARKING STATUS
+    # -----------------------------------------------------
     st.subheader("Update Your Parking Status")
 
     current_status = status_df.loc[
@@ -119,12 +133,16 @@ else:
         ] = new_status
 
         save_status(status_df)
-        st.success("✅ Parking status updated")
+
+        st.success("✅ Parking status saved and synced to OneDrive")
+        st.caption(f"📁 Saved at: {STATUS_FILE}")
         st.rerun()
 
     st.divider()
 
-    # -------- LIVE SLOT AVAILABILITY --------
+    # -----------------------------------------------------
+    # LIVE SLOT AVAILABILITY
+    # -----------------------------------------------------
     st.subheader("Live Parking Slot Availability")
 
     occupied = status_df[status_df["parked"] == "Yes"].shape[0]
