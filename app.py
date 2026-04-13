@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # ---------------- CONFIG ----------------
-DATA_DIR = r"C:\Parking_Slot\Data"
+DATA_DIR = r"C:\Users\10019784\OneDrive - Maruti Suzuki India Limited\Parking_Slot\Data"
 USERS_FILE = os.path.join(DATA_DIR, "users.csv")
 STATUS_FILE = os.path.join(DATA_DIR, "parking_status.csv")
 TOTAL_SLOTS = 10
